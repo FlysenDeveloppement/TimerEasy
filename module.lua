@@ -1,6 +1,6 @@
 --[[
 	API:
-	  Documentation: https://devforum.roblox.com/t/tablecare-v-101-module-to-manage-tables-more-easier/1533465
+	  Documentation: https://devforum.roblox.com/t/timereasy-a-module-to-make-timer-more-easy/1681642
 	  Version: 1.0.0
 	  
 	 
@@ -37,12 +37,14 @@ Timer.__index = Timer
 local Signal = require(script.Signal)
 
 function Timer.new(second:number)
-	if not second then error(debug.traceback("Missing seconds (number type) arguments.")) end
+	if not second or not typeof(second) == "number" then second = 0 end
 	
 	local self = setmetatable({}, Timer)
 	self.Time = second
 	self.BaseTime = second
 	self.IsPlaying = false
+	self.SecondMultiplier = 1
+	self.SpeedTime = 1
 	self.TimeChanged = Signal.new()
 	
 	return self
@@ -54,9 +56,9 @@ function Timer:Play()
 		self.Time = self.BaseTime
 		spawn(function()
 			while self.IsPlaying and self.Time > 0 do
-				self.Time = self.Time - 1
+				self.Time = self.Time - self.SecondMultiplier
 				self.TimeChanged:Fire(self.Time)
-				wait(1)
+				wait(self.SpeedTime)
 			end
 		end)
 	else
@@ -80,9 +82,9 @@ function Timer:Resume()
 			self.IsPlaying = true
 			spawn(function()
 				while self.IsPlaying and self.Time > 0 do
-					self.Time = self.Time - 1
+					self.Time = self.Time - self.SecondMultiplier
 					self.TimeChanged:Fire(self.Time)
-					wait(1)
+					wait(self.SpeedTime)
 				end
 			end)
 		else
@@ -93,8 +95,30 @@ end
 
 function Timer:AddTime(secondsToAdd:number)
 	if not secondsToAdd then error(debug.traceback("Missing 1 arguments to play the function.")) end
+	if not typeof(secondsToAdd) == "number" then error(debug.traceback("The secondsToAdd arguments must be a number")) end
 	
 	self.Time = self.Time + secondsToAdd
+end
+
+function Timer:SkipTime(secondsToSkip:number)
+	if not secondsToSkip then error(debug.traceback("Missing 1 arguments to play the function.")) end
+	if not typeof(secondsToSkip) == "number" then error(debug.traceback("The secondsToSkip arguments must be a number")) end
+
+	self.Timer = self.Timer - secondsToSkip
+end
+
+function Timer:SetSecondMultiplier(newMultiplier:number)
+	if not newMultiplier then newMultiplier = 1 end
+	if not typeof(newMultiplier) == "number" then error(debug.traceback("The newMultiplier arguments must be a number")) end
+	
+	self.SecondMultiplier = newMultiplier
+end
+
+function Timer:SetSpeedTime(newMultiplier:number)
+	if not newMultiplier then newMultiplier = 1 end
+	if not typeof(newMultiplier) == "number" then error(debug.traceback("The newMultiplier arguments must be a number")) end
+	
+	self.SpeedTime = newMultiplier
 end
 
 function Timer:Stop()
